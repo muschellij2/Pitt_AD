@@ -13,7 +13,7 @@ df = tibble::tibble(full_id = ids) %>%
     proc_dir = paste0("proc/", full_id),
     data_dir = paste0("data/", full_id))
 df$original_image = sapply(df$data_dir, list.files, pattern = "mprg|spgr", 
-  full.names = TRUE)
+                           full.names = TRUE)
 
 files = c(
   img = "T1_N4_noneck_reduced_winsor_regtoT1.nii.gz",
@@ -40,23 +40,32 @@ wide = df %>%
 
 iid = 1 
 results = vector(mode = "list", length = nrow(df))
+names(results) = df$full_id
 for (iid in seq(nrow(df))) {
   print(iid)
-  bm = df$brain_mask[iid]
-  bm = readNifti(bm)
-  tissue = df$tissue[iid]
-  tissue = readNifti(tissue)
-  vals = tissue[bm == 1]
-  tab = voxres(tissue, "cm")*table(vals)
-  results[[iid]] = tab
+  x = unlist(df[iid, c("brain_mask", "tissue")])
+  if (all(file.exists(x))) {
+    bm = df$brain_mask[iid]
+    bm = readNifti(bm)
+    tissue = df$tissue[iid]
+    tissue = readNifti(tissue)
+    vals = tissue[bm == 1]
+    tab = voxres(tissue, "cm")*table(vals)
+    tab = as.numeric(tab)
+    results[[iid]] = tab
+  }
 }
+xresults = results
 
-mat = do.call(rbind, results)
-colnames(mat) = c("background", "CSF", "GM", "WM")
+results = xresults
+results = results[!sapply(results, is.null)]
+results = lapply(results, function(x) as.data.frame(t(x)))
+mat = dplyr::bind_rows(results, .id = "full_id")
+colnames(mat) = c("full_id", "background", "CSF", "GM", "WM")
 mat = as.data.frame(mat)
-mat$total = rowSums(mat)
+mat$total = rowSums(mat[, c("background", "CSF", "GM", "WM")])
 
-long = cbind(df, mat) %>% 
+long = right_join(df, mat) %>% 
   select(id, field_strength, background, CSF, GM, WM, total) %>% 
   gather(var, value, background, CSF, GM, WM, total) 
 ddf = long %>% 
@@ -95,7 +104,7 @@ res = rep(NA, length(ctypes))
 names(res) = ctypes
 for (itype in ctypes) {
   cols = paste0(itype, c("_1.5", "_3"))
-  res[itype] = cor(ddf[, cols])[1,2]
+  res[itype] = cor(ddf[, cols], use = "pairwise.complete.obs")[1,2]
 }
 
 res

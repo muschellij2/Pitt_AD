@@ -7,15 +7,15 @@ df = tibble::tibble(full_id = ids) %>%
   mutate(
     field_strength = ifelse(grepl("1.5T", full_id), 1.5, 3),
     id = sub("_1.5T", "", full_id),
-    outdir = paste0("proc/", id))
+    outdir = paste0("proc/", full_id))
 i = as.numeric(Sys.getenv("SGE_TASK_ID"))
 if (is.na(i)) {
   i = 1
 }
 # for (i in seq(nrow(df))) {
-  # print(i)
+#   print(i)
   idf = df[i,]
-  iid = idf$id
+  iid = idf$full_id
   outdir = idf$outdir
   files = c(
     img = "T1_N4_noneck_reduced_winsor_regtoT1.nii.gz",
