@@ -33,7 +33,7 @@ if (!all(file.exists(files))) {
     x, 
     outdir = outdir,
     num_templates = 35,
-    brain_extraction_method = "robex")
+    brain_extraction_method = "bet")
   all_resampled = seg_normalize(
     prenormalize = processed, template = "none", verbose = 2)
   
