@@ -1,4 +1,5 @@
 library(neurobase)
+library(ANTsRCore)
 library(extrantsr)
 library(smri.process)
 setwd(here::here())
@@ -7,7 +8,7 @@ ids = list.files(path = "data", recursive = FALSE)
 # for (iid in ids) {
 i = as.numeric(Sys.getenv("SGE_TASK_ID"))
 if (is.na(i)) {
-  i = 1
+  i = 15
 }
 iid = ids[i]
 outdir = paste0("proc/", iid)
@@ -26,7 +27,9 @@ tissue = c(
 n = names(tissue)
 tissue = file.path(outdir, tissue)
 names(tissue) = n
-files = c(tissue, sub(".nii", "_resampled.nii", tissue)) 
+res_tissue = sub(".nii", "_resampled.nii", tissue)
+names(res_tissue) = paste0(n, "_resampled")
+files = c(tissue, res_tissue) 
 tissue = as.list(tissue)
 if (!all(file.exists(files))) {
   processed = smri_prenormalize(

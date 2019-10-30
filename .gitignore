@@ -2,4 +2,7 @@
 .RData
 .Rproj.user
 results/
-results_abp
+results_abp/
+results_bet/
+results_malf/
+results_robex/
